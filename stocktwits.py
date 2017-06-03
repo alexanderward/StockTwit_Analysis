@@ -78,6 +78,21 @@ class StockTwitFeed(Source):
         return results.get('messages')
 
 
+class StockTwitIntraday(Source):
+    def __init__(self, symbol):
+        super(StockTwitIntraday, self).__init__()
+        self.symbol = symbol
+
+    def get_intraday_trades(self):
+        self.url = "https://ql.stocktwits.com/intraday"
+        self.update_parameters({'symbol': self.symbol})
+        results = self.get_data(headers={
+            'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ("
+                          "KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+        })
+        return results
+
+
 class Symbol(peewee.Model):
     name = peewee.CharField(unique=True)
     stream_id = peewee.CharField()
@@ -85,6 +100,27 @@ class Symbol(peewee.Model):
 
     class Meta:
         database = db
+
+
+class SymbolPrice(peewee.Model):
+    symbol = peewee.ForeignKeyField(Symbol)
+    start_date = peewee.DateField()
+    end_date = peewee.DateField()
+    start_time = peewee.TimeField()
+    end_time = peewee.TimeField()
+    trades = peewee.IntegerField()
+    volume = peewee.IntegerField()
+    utc_offset = peewee.CharField()
+    low = peewee.FloatField()
+    open = peewee.FloatField()
+    close = peewee.FloatField()
+    high = peewee.FloatField()
+    twap = peewee.FloatField()
+    vwap = peewee.FloatField()
+
+    class Meta:
+        database = db
+        primary_key = peewee.CompositeKey('start_date', 'end_date', 'start_time', 'end_time', 'symbol')
 
 
 class User(peewee.Model):
@@ -135,9 +171,25 @@ def insert_messages(symbol, messages, item_id, stream_id):
             message_obj.save()
 
 
+def insert_intraday_trades(symbol, intraday_trades):
+    symbol = symbol.upper()
+    symbol_obj = Symbol.get(name=symbol)
+    for intraday_trade in intraday_trades:
+        it_dict = dict(symbol=symbol_obj, start_date=intraday_trade.get('StartDate'),
+                       end_date=intraday_trade.get('EndDate'),
+                       start_time=intraday_trade.get('StartTime'), end_time=intraday_trade.get('EndTime'),
+                       trades=intraday_trade.get('Trades'),
+                       volume=intraday_trade.get('Volume'), utc_offset=intraday_trade.get('UTCOffset'),
+                       low=intraday_trade.get('Low'),
+                       open=intraday_trade.get('Open'), close=intraday_trade.get('Close'),
+                       high=intraday_trade.get('High'),
+                       twap=intraday_trade.get('TWAP'), vwap=intraday_trade.get('VWAP'))
+        symbol_price_obj = SymbolPrice.get_or_create(**it_dict)
+
+
 def check_database():
     try:
-        db.create_tables([User, Message, Symbol])
+        db.create_tables([User, Message, Symbol, SymbolPrice])
     except peewee.OperationalError:
         pass
 
@@ -148,3 +200,7 @@ if __name__ == '__main__':
     st = StockTwitFeed(symbol=stock_symbol)
     msgs = st.retrieve_messages()
     insert_messages(stock_symbol, msgs, st.item_id, st.stream_id)
+
+    st_prices = StockTwitIntraday(symbol=stock_symbol)
+    trades = st_prices.get_intraday_trades()
+    insert_intraday_trades(stock_symbol, trades)

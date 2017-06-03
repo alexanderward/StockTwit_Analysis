@@ -64,13 +64,11 @@ class StockTwitFeed(Source):
         self.item_id = self.stream_id = stock_id
         return csrf_token, stock_id
 
-    def retrieve_messages(self, since=None):
-        if not since:
-            since = int(time.time()) - 300  # Default is 5 minutes ago
+    def retrieve_messages(self):
         csrf_token, stock_id = self.get_feed_parameters()
         self.url = 'https://stocktwits.com/streams/poll'
         self.update_parameters(
-            {'stream': 'symbol', 'since': since, 'blocking': '0', 'signed_in': '0', 'substream': 'top',
+            {'stream': 'symbol', 'blocking': '0', 'signed_in': '0', 'substream': 'top',
              'stream_id': stock_id, 'item_id': stock_id})
         results = self.get_data(headers={'X-CSRF-Token': csrf_token,
                                          'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ("
@@ -146,7 +144,7 @@ def check_database():
 
 if __name__ == '__main__':
     check_database()
-    stock_symbol = 'jdst'
+    stock_symbol = 'dust'
     st = StockTwitFeed(symbol=stock_symbol)
-    msgs = st.retrieve_messages(since=84906868)
+    msgs = st.retrieve_messages()
     insert_messages(stock_symbol, msgs, st.item_id, st.stream_id)

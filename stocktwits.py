@@ -60,6 +60,8 @@ class StockTwitFeed(Source):
         token_match = re.findall("csrf-token\"\scontent=\"(.*?)\"", data)
         csrf_token = token_match[0]
         id_match = re.findall("StreamHistory.init\(\'symbol\', \'(.*?)\'", data)
+        if not id_match:
+            raise ValueError("Stock symbol does not exist: %s" % self.symbol.upper())
         stock_id = id_match[0]
         self.item_id = self.stream_id = stock_id
         return csrf_token, stock_id
@@ -166,8 +168,8 @@ def insert_messages(symbol, messages, item_id, stream_id):
                 message_obj = Message.get(st_id=message.get('id'))
             except Message.DoesNotExist:
                 message_obj = Message.create(**message_dict)
-            message_obj.reshares = message.get('reshares')
-            message_obj.likes = message.get('likes')
+            message_obj.reshares = message.get('total_reshares')
+            message_obj.likes = message.get('total_likes')
             message_obj.save()
 
 
@@ -196,11 +198,12 @@ def check_database():
 
 if __name__ == '__main__':
     check_database()
-    stock_symbol = 'dust'
-    st = StockTwitFeed(symbol=stock_symbol)
-    msgs = st.retrieve_messages()
-    insert_messages(stock_symbol, msgs, st.item_id, st.stream_id)
+    symbols = ['nugt', 'jnug', 'dust', 'jdst']
+    for stock_symbol in symbols:
+        st = StockTwitFeed(symbol=stock_symbol)
+        msgs = st.retrieve_messages()
+        insert_messages(stock_symbol, msgs, st.item_id, st.stream_id)
 
-    st_prices = StockTwitIntraday(symbol=stock_symbol)
-    trades = st_prices.get_intraday_trades()
-    insert_intraday_trades(stock_symbol, trades)
+        st_prices = StockTwitIntraday(symbol=stock_symbol)
+        trades = st_prices.get_intraday_trades()
+        insert_intraday_trades(stock_symbol, trades)

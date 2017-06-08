@@ -1,5 +1,5 @@
 from models import Symbol, Message
-from sklearn.ensemble import GradientBoostingClassifier
+# from sklearn.ensemble import GradientBoostingClassifier
 
 
 def analyze_stock(symbol):
@@ -14,3 +14,6 @@ def analyze_stock(symbol):
 
 if __name__ == "__main__":
     analyze_stock("nugt")
+    analyze_stock("jnug")
+    analyze_stock("dust")
+    analyze_stock("jdst")

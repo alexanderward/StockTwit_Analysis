@@ -135,7 +135,7 @@ def insert_intraday_trades(symbol, intraday_trades):
 
 
 if __name__ == '__main__':
-    symbols = ['nugt', 'jnug', 'dust', 'jdst']
+    symbols = ['nugt', 'jnug', 'dust', 'jdst', 'oil', 'uso']
     for stock_symbol in symbols:
         st = StockTwitFeed(symbol=stock_symbol)
         msgs = st.retrieve_messages()

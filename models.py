@@ -37,8 +37,8 @@ class SymbolPrice(peewee.Model):
 
 
 class User(peewee.Model):
-    id = peewee.IntegerField()
-    username = peewee.CharField(unique=True)
+    id = peewee.IntegerField(unique=True)
+    username = peewee.CharField()
     name = peewee.CharField()
 
     class Meta:
@@ -52,7 +52,7 @@ class Message(peewee.Model):
     sentiment = peewee.CharField(null=True)
     reshares = peewee.IntegerField(null=True)
     likes = peewee.IntegerField(null=True)
-    timestamp = peewee.TextField()
+    timestamp = peewee.DateTimeField()
     body = peewee.TextField()
 
     class Meta:

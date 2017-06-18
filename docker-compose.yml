@@ -1,0 +1,38 @@
+version: '2'
+
+services:
+   # Redis
+  redis:
+    image: redis:2.8.19
+    hostname: redis
+    ports:
+      - "6379:6379"
+
+  # PostgreSQL database
+#  db:
+#    image: postgres:9.4
+#    hostname: db
+#    environment:
+#      - POSTGRES_USER=postgres
+#      - POSTGRES_PASSWORD=postgres
+#      - POSTGRES_DB=postgres
+#    ports:
+#      - "5432:5432"
+
+
+  tasks:
+      build:
+        context: tasks
+        dockerfile: Dockerfile
+      hostname: tasks
+      command: ./run.sh
+      working_dir: /app
+      volumes:
+        - ./tasks/src/:/app  # mount current directory inside container
+      ports:
+        - "8000:8000"
+      links:
+#         - db
+         - redis
+      depends_on:
+        - redis

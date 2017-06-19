@@ -2,6 +2,7 @@ import urllib
 import re
 import requests
 from models import Symbol, SymbolPrice, User, Message, db
+import peewee
 
 requests.packages.urllib3.disable_warnings()
 
@@ -96,13 +97,19 @@ class StockTwitIntraday(Source):
 def insert_messages(symbol, messages, item_id, stream_id):
     symbol = symbol.upper()
     symbol_dict = dict(name=symbol, stream_id=stream_id, item_id=item_id)
-    symbol_obj, created = Symbol.get_or_create(**symbol_dict)
+    try:
+        symbol_obj = Symbol.create(**symbol_dict)
+    except peewee.IntegrityError:
+        symbol_obj = Symbol.get(name=symbol)
 
     for message in messages:
         with db.atomic():
             user_dict = dict(id=message['user'].get('id'), username=message['user'].get('username'),
                              name=message['user'].get('name'))
-            user_obj, created = User.get_or_create(**user_dict)
+            try:
+                user_obj = User.create(**user_dict)
+            except peewee.IntegrityError:
+                user_obj = User.get(id=user_dict.get('id'))
 
             sentiment = message.get('sentiment')
             if sentiment:
@@ -131,7 +138,13 @@ def insert_intraday_trades(symbol, intraday_trades):
                        open=intraday_trade.get('Open'), close=intraday_trade.get('Close'),
                        high=intraday_trade.get('High'),
                        twap=intraday_trade.get('TWAP'), vwap=intraday_trade.get('VWAP'))
-        symbol_price_obj = SymbolPrice.get_or_create(**it_dict)
+        try:
+            symbol_price_obj = SymbolPrice.create(**it_dict)
+        except peewee.IntegrityError:
+            symbol_price_obj = SymbolPrice.get(symbol=symbol_obj, start_date=intraday_trade.get('StartDate'),
+                                               end_date=intraday_trade.get('EndDate'),
+                                               start_time=intraday_trade.get('StartTime'),
+                                               end_time=intraday_trade.get('EndTime'))
 
 
 if __name__ == '__main__':

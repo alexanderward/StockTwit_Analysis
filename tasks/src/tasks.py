@@ -11,7 +11,7 @@ celery.conf.update(
     CELERYBEAT_SCHEDULE={
         'save_page': {
             'task': 'stocktwits.get_intra_day_trades',
-            'schedule': timedelta(minutes=60)
+            'schedule': timedelta(hours=4)
         }
     }
 )

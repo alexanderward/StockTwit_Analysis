@@ -127,24 +127,26 @@ def insert_messages(symbol, messages, item_id, stream_id):
 
 def insert_intraday_trades(symbol, intraday_trades):
     symbol = symbol.upper()
-    symbol_obj = Symbol.get(name=symbol)
-    for intraday_trade in intraday_trades:
-        it_dict = dict(symbol=symbol_obj, start_date=intraday_trade.get('StartDate'),
-                       end_date=intraday_trade.get('EndDate'),
-                       start_time=intraday_trade.get('StartTime'), end_time=intraday_trade.get('EndTime'),
-                       trades=intraday_trade.get('Trades'),
-                       volume=intraday_trade.get('Volume'), utc_offset=intraday_trade.get('UTCOffset'),
-                       low=intraday_trade.get('Low'),
-                       open=intraday_trade.get('Open'), close=intraday_trade.get('Close'),
-                       high=intraday_trade.get('High'),
-                       twap=intraday_trade.get('TWAP'), vwap=intraday_trade.get('VWAP'))
-        try:
-            symbol_price_obj = SymbolPrice.create(**it_dict)
-        except peewee.IntegrityError:
-            symbol_price_obj = SymbolPrice.get(symbol=symbol_obj, start_date=intraday_trade.get('StartDate'),
-                                               end_date=intraday_trade.get('EndDate'),
-                                               start_time=intraday_trade.get('StartTime'),
-                                               end_time=intraday_trade.get('EndTime'))
+    with db.atomic():
+        symbol_obj = Symbol.get(name=symbol)
+        for intraday_trade in intraday_trades:
+            it_dict = dict(symbol=symbol_obj, start_date=intraday_trade.get('StartDate'),
+                           end_date=intraday_trade.get('EndDate'),
+                           start_time=intraday_trade.get('StartTime'), end_time=intraday_trade.get('EndTime'),
+                           trades=intraday_trade.get('Trades'),
+                           volume=intraday_trade.get('Volume'), utc_offset=intraday_trade.get('UTCOffset'),
+                           low=intraday_trade.get('Low'),
+                           open=intraday_trade.get('Open'), close=intraday_trade.get('Close'),
+                           high=intraday_trade.get('High'),
+                           twap=intraday_trade.get('TWAP'), vwap=intraday_trade.get('VWAP'))
+            try:
+                symbol_price_obj = SymbolPrice.create(**it_dict)
+            except peewee.IntegrityError:
+                pass
+                # symbol_price_obj = SymbolPrice.get(symbol=symbol_obj, start_date=intraday_trade.get('StartDate'),
+                #                                    end_date=intraday_trade.get('EndDate'),
+                #                                    start_time=intraday_trade.get('StartTime'),
+                #                                    end_time=intraday_trade.get('EndTime'))
 
 
 if __name__ == '__main__':

@@ -9,7 +9,7 @@ celery.conf.update(
     CELERY_TASK_SERIALIZER='json',
     CELERY_ACCEPT_CONTENT=['json'],
     CELERYBEAT_SCHEDULE={
-        'save_page': {
+        'intra_day_trades': {
             'task': 'stocktwits.get_intra_day_trades',
             'schedule': timedelta(hours=4)
         }

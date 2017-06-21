@@ -60,10 +60,12 @@ class Message(peewee.Model):
 
 
 def check_database():
+    db.connect()
     try:
         db.create_tables([User, Message, Symbol, SymbolPrice])
     except peewee.OperationalError:
         pass
+    db.close()
 
 
 check_database()

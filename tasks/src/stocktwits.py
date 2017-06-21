@@ -2,6 +2,7 @@ import urllib
 import re
 from functools import wraps
 
+import datetime
 import requests
 from models import Symbol, SymbolPrice, User, Message, db
 import peewee
@@ -128,7 +129,9 @@ def insert_messages(symbol, messages, item_id, stream_id):
             sentiment = message.get('sentiment')
             if sentiment:
                 sentiment = sentiment.get('class')
-            message_dict = dict(body=message.get('body'), timestamp=message.get('created_at'), sentiment=sentiment,
+            timestamp = datetime.datetime.strptime(message.get('created_at').split('-')[0].strip(), '%a, %d %b %Y '
+                                                                                                    '%H:%M:%S')
+            message_dict = dict(body=message.get('body'), timestamp=timestamp, sentiment=sentiment,
                                 symbol=symbol_obj, user=user_obj, st_id=message.get('id'))
             try:
                 message_obj = Message.get(st_id=message.get('id'))
@@ -144,9 +147,12 @@ def insert_intraday_trades(symbol, intraday_trades):
     symbol = symbol.upper()
     symbol_obj = Symbol.get(name=symbol)
     for intraday_trade in intraday_trades:
-        it_dict = dict(symbol=symbol_obj, start_date=intraday_trade.get('StartDate'),
-                       end_date=intraday_trade.get('EndDate'),
-                       start_time=intraday_trade.get('StartTime'), end_time=intraday_trade.get('EndTime'),
+        start_timestamp = '%s %s' % (intraday_trade.get('StartDate'), intraday_trade.get('StartTime'))
+        end_timestamp = '%s %s' % (intraday_trade.get('EndDate'), intraday_trade.get('EndTime'))
+        start_timestamp = datetime.datetime.strptime(start_timestamp, '%m/%d/%Y %H:%M:%S %p')
+        end_timestamp = datetime.datetime.strptime(end_timestamp, '%m/%d/%Y %H:%M:%S %p')
+        it_dict = dict(symbol=symbol_obj,
+                       start_timestamp=start_timestamp,end_timestamp=end_timestamp,
                        trades=intraday_trade.get('Trades'),
                        volume=intraday_trade.get('Volume'), utc_offset=intraday_trade.get('UTCOffset'),
                        low=intraday_trade.get('Low'),

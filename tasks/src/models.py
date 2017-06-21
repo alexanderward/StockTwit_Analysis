@@ -14,10 +14,8 @@ class Symbol(peewee.Model):
 
 class SymbolPrice(peewee.Model):
     symbol = peewee.ForeignKeyField(Symbol)
-    start_date = peewee.DateField()
-    end_date = peewee.DateField()
-    start_time = peewee.TimeField()
-    end_time = peewee.TimeField()
+    start_timestamp = peewee.DateTimeField(null=False)
+    end_timestamp = peewee.DateTimeField(null=False)
     trades = peewee.IntegerField()
     volume = peewee.IntegerField()
     utc_offset = peewee.CharField()
@@ -30,7 +28,7 @@ class SymbolPrice(peewee.Model):
 
     class Meta:
         database = db
-        primary_key = peewee.CompositeKey('start_date', 'end_date', 'start_time', 'end_time', 'symbol')
+        primary_key = peewee.CompositeKey('start_timestamp', 'end_timestamp', 'symbol')
 
     def __str__(self):
         return str(self.symbol)

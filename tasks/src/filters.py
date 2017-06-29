@@ -1,6 +1,6 @@
 import datetime
 from utils import MarketType
-from models import Symbol, Message, SymbolPrice, db
+from models import Symbol, Message, SymbolPrice, db, User
 
 
 class Filters(object):
@@ -47,4 +47,9 @@ class Filters(object):
         @staticmethod
         def date_is(date):
             return db.truncate_date('day', SymbolPrice.start_timestamp) == date
+
+    class User(object):
+        @staticmethod
+        def base():
+            return User.select(User)
 

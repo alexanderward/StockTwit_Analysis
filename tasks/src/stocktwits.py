@@ -105,6 +105,7 @@ def db_transaction(f):
             results = f(*args, **kwargs)
         db.close()
         return results
+
     return wrapped
 
 
@@ -147,26 +148,31 @@ def insert_intraday_trades(symbol, intraday_trades):
     symbol = symbol.upper()
     symbol_obj = Symbol.get(name=symbol)
     for intraday_trade in intraday_trades:
-        start_timestamp = '%s %s' % (intraday_trade.get('StartDate'), intraday_trade.get('StartTime'))
-        end_timestamp = '%s %s' % (intraday_trade.get('EndDate'), intraday_trade.get('EndTime'))
-        start_timestamp = datetime.datetime.strptime(start_timestamp, '%m/%d/%Y %H:%M:%S %p')
-        end_timestamp = datetime.datetime.strptime(end_timestamp, '%m/%d/%Y %H:%M:%S %p')
-        it_dict = dict(symbol=symbol_obj,
-                       start_timestamp=start_timestamp,end_timestamp=end_timestamp,
-                       trades=intraday_trade.get('Trades'),
-                       volume=intraday_trade.get('Volume'), utc_offset=intraday_trade.get('UTCOffset'),
-                       low=intraday_trade.get('Low'),
-                       open=intraday_trade.get('Open'), close=intraday_trade.get('Close'),
-                       high=intraday_trade.get('High'),
-                       twap=intraday_trade.get('TWAP'), vwap=intraday_trade.get('VWAP'))
-        try:
-            symbol_price_obj = SymbolPrice.create(**it_dict)
-        except peewee.IntegrityError:
-            pass
-            # symbol_price_obj = SymbolPrice.get(symbol=symbol_obj, start_date=intraday_trade.get('StartDate'),
-            #                                    end_date=intraday_trade.get('EndDate'),
-            #                                    start_time=intraday_trade.get('StartTime'),
-            #                                    end_time=intraday_trade.get('EndTime'))
+        start_date = intraday_trade.get('StartDate')
+        end_date = intraday_trade.get('EndDate')
+        start_time = intraday_trade.get('StartTime')
+        end_time = intraday_trade.get('EndTime')
+        if start_date and end_date and start_time and end_time:
+            start_timestamp = '%s %s' % (start_date, start_time)
+            end_timestamp = '%s %s' % (end_date, end_time)
+            start_timestamp = datetime.datetime.strptime(start_timestamp, '%m/%d/%Y %H:%M:%S %p')
+            end_timestamp = datetime.datetime.strptime(end_timestamp, '%m/%d/%Y %H:%M:%S %p')
+            it_dict = dict(symbol=symbol_obj,
+                           start_timestamp=start_timestamp, end_timestamp=end_timestamp,
+                           trades=intraday_trade.get('Trades'),
+                           volume=intraday_trade.get('Volume'), utc_offset=intraday_trade.get('UTCOffset'),
+                           low=intraday_trade.get('Low'),
+                           open=intraday_trade.get('Open'), close=intraday_trade.get('Close'),
+                           high=intraday_trade.get('High'),
+                           twap=intraday_trade.get('TWAP'), vwap=intraday_trade.get('VWAP'))
+            try:
+                symbol_price_obj = SymbolPrice.create(**it_dict)
+            except peewee.IntegrityError:
+                pass
+                # symbol_price_obj = SymbolPrice.get(symbol=symbol_obj, start_date=intraday_trade.get('StartDate'),
+                #                                    end_date=intraday_trade.get('EndDate'),
+                #                                    start_time=intraday_trade.get('StartTime'),
+                #                                    end_time=intraday_trade.get('EndTime'))
 
 
 if __name__ == '__main__':
